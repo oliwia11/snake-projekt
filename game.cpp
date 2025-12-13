@@ -21,6 +21,14 @@ eDirection dir;
 
 bool gameOver;
 
+//eliminacja migotania dla estetyki
+void GotoXY(int x, int y) {
+    COORD coord;
+    coord.X = x;
+    coord.Y = y;
+    SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
+}
+
 //ustawienia poczatkowe gry
 void Setup() {
     gameOver = false;
@@ -36,6 +44,7 @@ void Setup() {
 
 //plansza 
 void Draw() {
+    GotoXY(0, 0);   //dla plynnosci gry
 
     for (int i = 0; i < WIDTH + 2; i++) cout << "#";
     cout << endl;
@@ -60,6 +69,28 @@ void Draw() {
     cout << endl;
 
     cout << "Wynik: " << score << endl;
+}
+
+void Input() {  //kontrala oblugi klawiatury i poruszania sie 
+    if (_kbhit()) { 
+        switch (_getch()) {
+        case 'a':
+            if (dir != RIGHT) dir = LEFT; //zeby sie nie cofal
+            break;
+        case 'd':
+            if (dir != LEFT) dir = RIGHT;
+            break;
+        case 'w':
+            if (dir != DOWN) dir = UP;
+            break;
+        case 's':
+            if (dir != UP) dir = DOWN;
+            break;
+        case 'x':
+            gameOver = true;
+            break;
+        }
+    }
 }
 
 int main(){
