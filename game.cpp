@@ -132,6 +132,13 @@ void Logic() { // logika gry - ruch ogona, kolizje, owoce
 }
 
 int main() {
+
+    HANDLE consoleHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+    CONSOLE_CURSOR_INFO cursorInfo;
+    GetConsoleCursorInfo(consoleHandle, &cursorInfo);
+    cursorInfo.bVisible = false; //ukrycie kursora
+    SetConsoleCursorInfo(consoleHandle, &cursorInfo);
+
     Setup();
     while (!gameOver) {
         Draw();
