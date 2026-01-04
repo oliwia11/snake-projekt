@@ -1,6 +1,13 @@
 #include <iostream>
 #include <conio.h>
 #include <windows.h>
+//dodaam do bonusów 
+#include <cstdlib>
+#include <ctime>
+
+/// <summary>
+/// // Prosty klon gry Snake z dodatkowymi bonusami 
+/// </summary>
 
 using namespace std;
 
@@ -12,6 +19,10 @@ const int HEIGHT = 20;
 int x, y;
 int fruitX, fruitY;
 int score;
+//do bonusów
+int bonusX, bonusY;
+bool bonusActive = false;
+int bonusTimer = 0;
 
 int tailX[100], tailY[100];
 int nTail;
@@ -29,8 +40,21 @@ void GotoXY(int x, int y) {
     SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
 }
 
+// Sprawdza, czy dane pole jest wolne (nie ma tam wê¿a ani owocu)
+bool IsFree(int _x, int _y) {
+    if (_x == fruitX && _y == fruitY) return false;
+    if (_x == x && _y == y) return false;
+    for (int i = 0; i < nTail; i++) {
+        if (tailX[i] == _x && tailY[i] == _y) return false;
+    }
+    return true;
+}
+
+
 //ustawienia poczatkowe gry
 void Setup() {
+    srand(time(0));
+
     gameOver = false;
     dir = STOP;
     x = WIDTH / 2;
@@ -38,6 +62,10 @@ void Setup() {
 
     fruitX = rand() % WIDTH;
     fruitY = rand() % HEIGHT;
+
+	//do bonósów
+    bonusActive = false;
+
     score = 0;
     nTail = 0;
 }
@@ -57,6 +85,8 @@ void Draw() {
                 cout << "O";
             else if (i == fruitY && j == fruitX)
                 cout << "@";
+			else if (bonusActive && i == bonusY && j == bonusX) //rysowanie bonusa
+                cout << "$";
             else { 				//rysowanie ogona
                 bool print = false;
                 for (int k = 0; k < nTail; k++) {
@@ -77,6 +107,10 @@ void Draw() {
     cout << endl;
 
     cout << "Wynik: " << score << endl;
+
+    if(bonusActive)
+		cout << "Bonus aktywny! Zdobadz dodatkowe punkty!" << endl;
+
 }
 
 void Input() {  //kontrala oblugi klawiatury i poruszania sie 
@@ -100,6 +134,9 @@ void Input() {  //kontrala oblugi klawiatury i poruszania sie
         }
     }
 }
+
+
+
 void Logic() { // logika gry - ruch ogona, kolizje, owoce
     int prevX = tailX[0];
     int prevY = tailY[0];
@@ -128,6 +165,30 @@ void Logic() { // logika gry - ruch ogona, kolizje, owoce
         nTail++; // wydluzenie owoca
         fruitX = rand() % WIDTH; // nowy owoc
         fruitY = rand() % HEIGHT;
+
+		// Aktywacja bonusa
+        // 40% szansy na bonus po ka¿dym owocu
+        if (!bonusActive && (rand() % 100 < 40)) {
+            do {
+                bonusX = rand() % WIDTH;
+                bonusY = rand() % HEIGHT;
+            } while (!IsFree(bonusX, bonusY));
+            bonusActive = true;
+            bonusTimer = 50; // Czas trwania 
+        }
+    }
+
+    // Jedzenie bonusa
+    // Odliczanie czasu bonusa i znikanie
+    if (bonusActive) {
+        bonusTimer--;
+        if (x == bonusX && y == bonusY) {
+            score += 50;
+            bonusActive = false;
+        }
+        if (bonusTimer <= 0) {
+            bonusActive = false;
+        }
     }
 }
 
