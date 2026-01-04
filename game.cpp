@@ -1,13 +1,8 @@
 #include <iostream>
 #include <conio.h>
-#include <windows.h>
-//dodaam do bonusów 
+#include <windows.h> 
 #include <cstdlib>
 #include <ctime>
-
-/// <summary>
-/// // Prosty klon gry Snake z dodatkowymi bonusami 
-/// </summary>
 
 using namespace std;
 
@@ -19,7 +14,7 @@ const int HEIGHT = 20;
 int x, y;
 int fruitX, fruitY;
 int score;
-//do bonusów
+
 int bonusX, bonusY;
 bool bonusActive = false;
 int bonusTimer = 0;
@@ -40,7 +35,7 @@ void GotoXY(int x, int y) {
     SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
 }
 
-// Sprawdza, czy dane pole jest wolne (nie ma tam wê¿a ani owocu)
+// Sprawdza, czy dane pole jest wolne (nie ma tam wÃªÂ¿a ani owocu)
 bool IsFree(int _x, int _y) {
     if (_x == fruitX && _y == fruitY) return false;
     if (_x == x && _y == y) return false;
@@ -62,8 +57,7 @@ void Setup() {
 
     fruitX = rand() % WIDTH;
     fruitY = rand() % HEIGHT;
-
-	//do bonósów
+	
     bonusActive = false;
 
     score = 0;
@@ -167,8 +161,8 @@ void Logic() { // logika gry - ruch ogona, kolizje, owoce
         fruitY = rand() % HEIGHT;
 
 		// Aktywacja bonusa
-        // 40% szansy na bonus po ka¿dym owocu
-        if (!bonusActive && (rand() % 100 < 40)) {
+        // 30% szansy na bonus po kaÂ¿dym owocu
+        if (!bonusActive && (rand() % 100 < 30)) {
             do {
                 bonusX = rand() % WIDTH;
                 bonusY = rand() % HEIGHT;
