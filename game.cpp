@@ -244,7 +244,7 @@ void Rysowanie() {
                 }
                 }
             }
-        }
+        
         spriteJablko->setPosition({ (float)owocX * ROZMIAR, (float)owocY * ROZMIAR });
         okno.draw(*spriteJablko);
 
