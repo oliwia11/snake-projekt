@@ -5,29 +5,65 @@
 #include <string>
 #include <memory>
 #include <optional>
+#include <vector>
+#include <fstream>
 
 // --- KONFIGURACJA ---
 const int SZEROKOSC = 40;
 const int WYSOKOSC = 20;
 const int ROZMIAR = 25;
 
-enum StanGry { MENU, GRA_KLASYCZNA, GRA_NIESKONCZONA };
+enum StanGry { MENU, GRA_KLASYCZNA, GRA_NIESKONCZONA, GRA_PRZESZKODY};
 StanGry aktualnyStan = MENU;
 
 int wazX[2000], wazY[2000];
 int dlugoscWaza = 1;
 int owocX, owocY, bonusX, bonusY, bonusCzas = 0, wynik = 0, kierunek = 0;
+int najlepszyWynik = 0;
 bool jestBonus = false, koniecGry = false;
 
+struct Punkt { int x, y; }; //zmienne dla przeszkod
+std::vector<Punkt> przeszkody;
+
 sf::RenderWindow okno;
-sf::Texture teksturaTlo, teksturaJablko, teksturaGwiazda, teksturaGlowa;
+sf::Texture teksturaTlo, teksturaJablko, teksturaGwiazda, teksturaGlowa, teksturaKamien;
 sf::Font czcionka;
 sf::Texture teksturaMenuTlo;
 
 std::unique_ptr<sf::Sprite> spriteMenuTlo;
-std::unique_ptr<sf::Sprite> spriteTlo, spriteJablko, spriteGwiazda, spriteGlowa;
+std::unique_ptr<sf::Sprite> spriteTlo, spriteJablko, spriteGwiazda, spriteGlowa, spriteKamien;
 std::unique_ptr<sf::Text> napisWynik, napisMenu;
 std::unique_ptr<sf::RectangleShape> kwadracikWaza;
+
+void WczytajRekord() {
+    std::ifstream plik("rekord.txt"); 
+    if (plik.is_open()) {
+        plik >> najlepszyWynik; 
+        plik.close();
+    }
+}
+
+void ZapiszRekord() {
+    std::ofstream plik("rekord.txt"); 
+    if (plik.is_open()) {
+        plik << najlepszyWynik;
+        plik.close();
+    }
+}
+
+//Funkcja do generowania przeszkod
+void GenerujPrzeszkody() {
+    przeszkody.clear();
+    for(int i=0; i<15; i++) { // Generujemy 15 kamieni
+        int kX = rand() % SZEROKOSC;
+        int kY = rand() % WYSOKOSC;
+        // Upewniamy sie ze kamien nie jest na srodku (gdzie startuje waz)
+        if(kX != SZEROKOSC/2 && kY != WYSOKOSC/2) {
+            przeszkody.push_back({kX, kY});
+        }
+    }
+}
+
 
 void Ustawienia() {
     srand(static_cast<unsigned int>(time(nullptr)));
@@ -46,6 +82,8 @@ void Ustawienia() {
     if (!czcionka.openFromFile("arial.ttf")) std::cerr << "brak arial.ttf\n";
     if (!teksturaMenuTlo.loadFromFile("menu_bg.png")) std::cerr << "brak menu_bg.png\n";
 
+    bool maKamien = teksturaKamien.loadFromFile("rock.png");
+
     spriteTlo = std::make_unique<sf::Sprite>(teksturaTlo);
     spriteTlo->setScale({ (float)(SZEROKOSC * ROZMIAR) / teksturaTlo.getSize().x, (float)(WYSOKOSC * ROZMIAR) / teksturaTlo.getSize().y });
 
@@ -58,6 +96,9 @@ void Ustawienia() {
     spriteGlowa = std::make_unique<sf::Sprite>(teksturaGlowa);
     spriteGlowa->setOrigin({ (float)teksturaGlowa.getSize().x / 2.f, (float)teksturaGlowa.getSize().y / 2.f });
     spriteGlowa->setScale({ ((float)ROZMIAR / teksturaGlowa.getSize().x) * 1.1f, ((float)ROZMIAR / teksturaGlowa.getSize().x) * 1.1f });
+
+    spriteKamien = std::make_unique<sf::Sprite>(teksturaKamien);
+    if(maKamien) spriteKamien->setScale({ (float)ROZMIAR / teksturaKamien.getSize().x, (float)ROZMIAR / teksturaKamien.getSize().y });
 
     spriteMenuTlo = std::make_unique<sf::Sprite>(teksturaMenuTlo);
     spriteMenuTlo->setScale({
@@ -75,8 +116,10 @@ void Ustawienia() {
     napisMenu->setString(
         "SNAKE - MENU GLOWNE\n"
         "---------------------------\n"
+        "Rekord: " + std::to_string(najlepszyWynik) + "\n\n"
         "1. TRYB KLASYCZNY Z BONUSAMI\n"
-        "2. TRYB NIESKONCZONA PLANSZA\n\n"
+        "2. TRYB NIESKONCZONA PLANSZA\n"
+        "3. TRYB Z PRZESZKODAMI\n\n"
         "LEGENDA:\n"
         "[ Glowa ] - Twoj waz\n"
         "[ Jablko ] - +10 punktow\n"
@@ -128,12 +171,34 @@ void Logika() {
     for (int i = 1; i < dlugoscWaza; i++) {
         if (wazX[i] == wazX[0] && wazY[i] == wazY[0]) koniecGry = true;
     }
-
+    //Kolizja z kamieniami (tylko w trybie 3)
+    if (aktualnyStan == GRA_PRZESZKODY) {
+        for (const auto& kamien : przeszkody) {
+            if (wazX[0] == kamien.x && wazY[0] == kamien.y) {
+                koniecGry = true;
+            }
+        }
+    }
     // Jedzenie owocow
     if (wazX[0] == owocX && wazY[0] == owocY) {
         wynik += 10;
+        if (wynik > najlepszyWynik) { //zmiana
+            najlepszyWynik = wynik;
+            ZapiszRekord(); 
+        }
         if (dlugoscWaza < 1999) dlugoscWaza++;
-        owocX = rand() % SZEROKOSC; owocY = rand() % WYSOKOSC;
+        
+        //jablko nie zrespi sie na kamieniu
+        do {
+            owocX = rand() % SZEROKOSC; 
+            owocY = rand() % WYSOKOSC;
+            bool kolizjaZKamieniem = false;
+            if(aktualnyStan == GRA_PRZESZKODY) {
+                for(auto& k : przeszkody) if(k.x == owocX && k.y == owocY) kolizjaZKamieniem = true;
+            }
+            if(!kolizjaZKamieniem) break;
+        } while(true);
+   
 
         // Szansa na bonus (tylko w klasyku)
         if (aktualnyStan == GRA_KLASYCZNA && !jestBonus && rand() % 10 < 3) {
@@ -144,7 +209,13 @@ void Logika() {
 
     if (jestBonus) {
         bonusCzas--;
-        if (wazX[0] == bonusX && wazY[0] == bonusY) { wynik += 50; jestBonus = false; }
+        if (wazX[0] == bonusX && wazY[0] == bonusY) { 
+        wynik += 50;
+        if (wynik > najlepszyWynik) { //sprawdzenie rekordu przy bonusie
+                najlepszyWynik = wynik;
+                ZapiszRekord();
+            }
+        jestBonus = false; }
         if (bonusCzas <= 0) jestBonus = false;
     }
 }
@@ -157,10 +228,23 @@ void Rysowanie() {
         sf::RectangleShape nakladka(sf::Vector2f((float)SZEROKOSC * ROZMIAR, (float)WYSOKOSC * ROZMIAR + 60));
         nakladka.setFillColor(sf::Color(0, 0, 0, 100));
         okno.draw(nakladka);
+        std::string menuStr = "SNAKE - MENU GLOWNE\n---------------------------\nRekord: " + std::to_string(najlepszyWynik) + "\n\n1. TRYB KLASYCZNY Z BONUSAMI\n2. TRYB NIESKONCZONA PLANSZA\n3. TRYB Z PRZESZKODAMI\n\nSterowanie: W, A, S, D";
+        napisMenu->setString(menuStr);
         okno.draw(*napisMenu);
     }
     else {
         if (spriteTlo) okno.draw(*spriteTlo);
+
+        //rysowanie przeszkod
+        if (aktualnyStan == GRA_PRZESZKODY) {
+            for (const auto& kamien : przeszkody) {
+                if (spriteKamien && teksturaKamien.getSize().x > 0) {
+                    spriteKamien->setPosition({ (float)kamien.x * ROZMIAR, (float)kamien.y * ROZMIAR });
+                    okno.draw(*spriteKamien);
+                }
+                }
+            }
+        }
         spriteJablko->setPosition({ (float)owocX * ROZMIAR, (float)owocY * ROZMIAR });
         okno.draw(*spriteJablko);
 
@@ -183,6 +267,12 @@ void Rysowanie() {
                 okno.draw(*kwadracikWaza);
             }
         }
+       // Wyswietlanie rekordu podczas gry
+        std::string trybNapis = "";
+        if(aktualnyStan == GRA_NIESKONCZONA) trybNapis = " [NIESKONCZONA]";
+        else if(aktualnyStan == GRA_PRZESZKODY) trybNapis = " [HARDCORE]";
+        else trybNapis = " [KLASYK]";
+        
         napisWynik->setString("Wynik: " + std::to_string(wynik) + (aktualnyStan == GRA_NIESKONCZONA ? " [NIESKONCZONA]" : " [KLASYK]"));
         okno.draw(*napisWynik);
     }
@@ -198,6 +288,10 @@ int main() {
                 if (aktualnyStan == MENU) {
                     if (klawisz->code == sf::Keyboard::Key::Num1) aktualnyStan = GRA_KLASYCZNA;
                     if (klawisz->code == sf::Keyboard::Key::Num2) aktualnyStan = GRA_NIESKONCZONA;
+                     if (klawisz->code == sf::Keyboard::Key::Num3) {
+                        aktualnyStan = GRA_PRZESZKODY;
+                        GenerujPrzeszkody();
+                     }
                 }
                 else {
                     if (klawisz->code == sf::Keyboard::Key::A && kierunek != 2) kierunek = 1;
