@@ -1,213 +1,170 @@
+#include <SFML/Graphics.hpp>
 #include <iostream>
-#include <conio.h>
-#include <windows.h>
-//dodaam do bonusów 
 #include <cstdlib>
 #include <ctime>
+#include <string>
+#include <memory>
+#include <optional>
 
-/// <summary>
-/// // Prosty klon gry Snake z dodatkowymi bonusami 
-/// </summary>
+const int SZEROKOSC = 40;
+const int WYSOKOSC = 20;
+const int ROZMIAR = 25;
 
-using namespace std;
+int wazX[2000], wazY[2000];
+int dlugoscWaza = 1;
+int owocX, owocY, bonusX, bonusY, bonusCzas = 0, wynik = 0, kierunek = 0;
+bool jestBonus = false, koniecGry = false;
 
-//wielkosc mapy
-const int WIDTH = 40;
-const int HEIGHT = 20;
+sf::RenderWindow okno;
+sf::Texture teksturaTlo, teksturaJablko, teksturaGwiazda, teksturaGlowa;
+sf::Font czcionka;
 
-//zmienne globalne 
-int x, y;
-int fruitX, fruitY;
-int score;
-//do bonusów
-int bonusX, bonusY;
-bool bonusActive = false;
-int bonusTimer = 0;
+std::unique_ptr<sf::Sprite> spriteTlo, spriteJablko, spriteGwiazda, spriteGlowa;
+std::unique_ptr<sf::Text> napisWynik;
+std::unique_ptr<sf::RectangleShape> kwadracikWaza;
 
-int tailX[100], tailY[100];
-int nTail;
+void Ustawienia() {
+    srand(static_cast<unsigned int>(time(nullptr)));
 
-enum eDirection { STOP = 0, LEFT, RIGHT, UP, DOWN };
-eDirection dir;
+    okno.create(sf::VideoMode({ (unsigned int)SZEROKOSC * ROZMIAR, (unsigned int)WYSOKOSC * ROZMIAR + 40 }), "Wonsz SFML 3.0");
+    okno.setFramerateLimit(10);
 
-bool gameOver;
+    wazX[0] = SZEROKOSC / 2;
+    wazY[0] = WYSOKOSC / 2;
 
-//eliminacja migotania dla estetyki
-void GotoXY(int x, int y) {
-    COORD coord;
-    coord.X = x;
-    coord.Y = y;
-    SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
+    if (!teksturaTlo.loadFromFile("background.png")) std::cerr << "brak background.png\n";
+    if (!teksturaJablko.loadFromFile("apple.png")) std::cerr << "brak apple.png\n";
+    if (!teksturaGwiazda.loadFromFile("star.png")) std::cerr << "brak star.png\n";
+    if (!teksturaGlowa.loadFromFile("head.png")) std::cerr << "brak head.png\n";
+    if (!czcionka.openFromFile("arial.ttf")) std::cerr << "brak arial.ttf\n";
+
+    spriteTlo = std::make_unique<sf::Sprite>(teksturaTlo);
+    spriteTlo->setScale({ (float)(SZEROKOSC * ROZMIAR) / teksturaTlo.getSize().x,
+                          (float)(WYSOKOSC * ROZMIAR) / teksturaTlo.getSize().y });
+
+    spriteJablko = std::make_unique<sf::Sprite>(teksturaJablko);
+    spriteJablko->setScale({ (float)ROZMIAR / teksturaJablko.getSize().x,
+                             (float)ROZMIAR / teksturaJablko.getSize().y });
+
+    spriteGwiazda = std::make_unique<sf::Sprite>(teksturaGwiazda);
+    spriteGwiazda->setScale({ (float)ROZMIAR / teksturaGwiazda.getSize().x,
+                              (float)ROZMIAR / teksturaGwiazda.getSize().y });
+
+    spriteGlowa = std::make_unique<sf::Sprite>(teksturaGlowa);
+    float skalaGlowy = ((float)ROZMIAR / teksturaGlowa.getSize().x) * 1.1f;
+    spriteGlowa->setScale({ skalaGlowy, skalaGlowy });
+    spriteGlowa->setOrigin({ (float)teksturaGlowa.getSize().x / 2.f, (float)teksturaGlowa.getSize().y / 2.f });
+
+    napisWynik = std::make_unique<sf::Text>(czcionka);
+    napisWynik->setCharacterSize(20);
+    napisWynik->setPosition({ 10.f, (float)WYSOKOSC * ROZMIAR + 5.f });
+
+    kwadracikWaza = std::make_unique<sf::RectangleShape>(sf::Vector2f{ (float)ROZMIAR - 1.f, (float)ROZMIAR - 1.f });
+    kwadracikWaza->setFillColor(sf::Color::Green);
+
+    owocX = rand() % SZEROKOSC;
+    owocY = rand() % WYSOKOSC;
 }
 
-// Sprawdza, czy dane pole jest wolne (nie ma tam wê¿a ani owocu)
-bool IsFree(int _x, int _y) {
-    if (_x == fruitX && _y == fruitY) return false;
-    if (_x == x && _y == y) return false;
-    for (int i = 0; i < nTail; i++) {
-        if (tailX[i] == _x && tailY[i] == _y) return false;
-    }
-    return true;
-}
-
-
-//ustawienia poczatkowe gry
-void Setup() {
-    srand(time(0));
-
-    gameOver = false;
-    dir = STOP;
-    x = WIDTH / 2;
-    y = HEIGHT / 2;
-
-    fruitX = rand() % WIDTH;
-    fruitY = rand() % HEIGHT;
-
-	//do bonósów
-    bonusActive = false;
-
-    score = 0;
-    nTail = 0;
-}
-
-//plansza 
-void Draw() {
-    GotoXY(0, 0);   //dla plynnosci gry
-
-    for (int i = 0; i < WIDTH + 2; i++) cout << "#";
-    cout << endl;
-
-    for (int i = 0; i < HEIGHT; i++) {
-        for (int j = 0; j < WIDTH; j++) {
-            if (j == 0) cout << "#";
-
-            if (i == y && j == x)
-                cout << "O";
-            else if (i == fruitY && j == fruitX)
-                cout << "@";
-			else if (bonusActive && i == bonusY && j == bonusX) //rysowanie bonusa
-                cout << "$";
-            else { 				//rysowanie ogona
-                bool print = false;
-                for (int k = 0; k < nTail; k++) {
-                    if (tailX[k] == j && tailY[k] == i) {
-                        cout << "o";
-                        print = true;
-                    }
-                }
-                if (!print) cout << " ";
-            }
-
-            if (j == WIDTH - 1) cout << "#";
+void Klawisze() {
+    while (const std::optional zdarzenie = okno.pollEvent()) {
+        if (zdarzenie->is<sf::Event::Closed>()) {
+            okno.close();
         }
-        cout << endl;
-    }
 
-    for (int i = 0; i < WIDTH + 2; i++) cout << "#";
-    cout << endl;
-
-    cout << "Wynik: " << score << endl;
-
-    if(bonusActive)
-		cout << "Bonus aktywny! Zdobadz dodatkowe punkty!" << endl;
-
-}
-
-void Input() {  //kontrala oblugi klawiatury i poruszania sie 
-    if (_kbhit()) { 
-        switch (_getch()) {
-        case 'a':
-            if (dir != RIGHT) dir = LEFT; //zeby sie nie cofal
-            break;
-        case 'd':
-            if (dir != LEFT) dir = RIGHT;
-            break;
-        case 'w':
-            if (dir != DOWN) dir = UP;
-            break;
-        case 's':
-            if (dir != UP) dir = DOWN;
-            break;
-        case 'x':
-            gameOver = true;
-            break;
+        if (const auto* klawisz = zdarzenie->getIf<sf::Event::KeyPressed>()) {
+            if (klawisz->code == sf::Keyboard::Key::A && kierunek != 2) kierunek = 1;
+            if (klawisz->code == sf::Keyboard::Key::D && kierunek != 1) kierunek = 2;
+            if (klawisz->code == sf::Keyboard::Key::W && kierunek != 4) kierunek = 3;
+            if (klawisz->code == sf::Keyboard::Key::S && kierunek != 3) kierunek = 4;
         }
     }
 }
 
+void Logika() {
+    if (kierunek == 0) return;
 
-
-void Logic() { // logika gry - ruch ogona, kolizje, owoce
-    int prevX = tailX[0];
-    int prevY = tailY[0];
-    int prev2X, prev2Y;
-    tailX[0] = x; // pierwszy element ogona to pozycja glowy
-    tailY[0] = y;
-    for (int i = 1; i < nTail; i++) {
-        prev2X = tailX[i];
-        prev2Y = tailY[i];
-        tailX[i] = prevX;
-        tailY[i] = prevY;
-        prevX = prev2X;
-        prevY = prev2Y;
-    } // ruch glowy w zaleznosci od kierunku
-    switch (dir) {
-    case LEFT:  x--; break;
-    case RIGHT: x++; break;
-    case UP:    y--; break;
-    case DOWN:  y++; break;
-    default:    break;
+    // ruch ogona
+    for (int i = dlugoscWaza - 1; i > 0; i--) {
+        wazX[i] = wazX[i - 1];
+        wazY[i] = wazY[i - 1];
     }
-    if (x >= WIDTH || x < 0 || y >= HEIGHT || y < 0) gameOver = true; // kolizje ze scianami
-    for (int i = 0; i < nTail; i++) if (tailX[i] == x && tailY[i] == y) gameOver = true; //kolizje z ogonem
-    if (x == fruitX && y == fruitY) { // jedzenie owoca
-        score += 10;
-        nTail++; // wydluzenie owoca
-        fruitX = rand() % WIDTH; // nowy owoc
-        fruitY = rand() % HEIGHT;
 
-		// Aktywacja bonusa
-        // 40% szansy na bonus po ka¿dym owocu
-        if (!bonusActive && (rand() % 100 < 40)) {
-            do {
-                bonusX = rand() % WIDTH;
-                bonusY = rand() % HEIGHT;
-            } while (!IsFree(bonusX, bonusY));
-            bonusActive = true;
-            bonusTimer = 50; // Czas trwania 
+    // ruch glowy
+    if (kierunek == 1) wazX[0]--;
+    if (kierunek == 2) wazX[0]++;
+    if (kierunek == 3) wazY[0]--;
+    if (kierunek == 4) wazY[0]++;
+
+    // kolizje
+    if (wazX[0] < 0 || wazX[0] >= SZEROKOSC || wazY[0] < 0 || wazY[0] >= WYSOKOSC) koniecGry = true;
+    for (int i = 1; i < dlugoscWaza; i++) {
+        if (wazX[i] == wazX[0] && wazY[i] == wazY[0]) koniecGry = true;
+    }
+
+    // zjadanie
+    if (wazX[0] == owocX && wazY[0] == owocY) {
+        wynik += 10;
+        if (dlugoscWaza < 1999) dlugoscWaza++;
+        owocX = rand() % SZEROKOSC; owocY = rand() % WYSOKOSC;
+
+        if (!jestBonus && rand() % 10 < 3) {
+            jestBonus = true; bonusCzas = 50;
+            bonusX = rand() % SZEROKOSC; bonusY = rand() % WYSOKOSC;
         }
     }
 
-    // Jedzenie bonusa
-    // Odliczanie czasu bonusa i znikanie
-    if (bonusActive) {
-        bonusTimer--;
-        if (x == bonusX && y == bonusY) {
-            score += 50;
-            bonusActive = false;
+    if (jestBonus) {
+        bonusCzas--;
+        if (wazX[0] == bonusX && wazY[0] == bonusY) { wynik += 50; jestBonus = false; }
+        if (bonusCzas <= 0) jestBonus = false;
+    }
+}
+
+void Rysowanie() {
+    okno.clear(sf::Color(30, 30, 30));
+    if (spriteTlo) okno.draw(*spriteTlo);
+
+    spriteJablko->setPosition({ (float)owocX * ROZMIAR, (float)owocY * ROZMIAR });
+    okno.draw(*spriteJablko);
+
+    if (jestBonus) {
+        spriteGwiazda->setPosition({ (float)bonusX * ROZMIAR, (float)bonusY * ROZMIAR });
+        okno.draw(*spriteGwiazda);
+    }
+
+    for (int i = 0; i < dlugoscWaza; i++) {
+        if (i == 0) {
+            // obracanie glowy
+            if (kierunek == 3) spriteGlowa->setRotation(sf::degrees(180.f));
+            else if (kierunek == 4) spriteGlowa->setRotation(sf::degrees(0.f));
+            else if (kierunek == 1) spriteGlowa->setRotation(sf::degrees(90.f));
+            else if (kierunek == 2) spriteGlowa->setRotation(sf::degrees(270.f));
+
+            spriteGlowa->setPosition({ (float)wazX[i] * ROZMIAR + ROZMIAR / 2.f,
+                                       (float)wazY[i] * ROZMIAR + ROZMIAR / 2.f });
+            okno.draw(*spriteGlowa);
         }
-        if (bonusTimer <= 0) {
-            bonusActive = false;
+        else {
+            kwadracikWaza->setPosition({ (float)wazX[i] * ROZMIAR, (float)wazY[i] * ROZMIAR });
+            okno.draw(*kwadracikWaza);
         }
     }
+
+    napisWynik->setString("wynik: " + std::to_string(wynik));
+    okno.draw(*napisWynik);
+    okno.display();
 }
 
 int main() {
-
-    HANDLE consoleHandle = GetStdHandle(STD_OUTPUT_HANDLE);
-    CONSOLE_CURSOR_INFO cursorInfo;
-    GetConsoleCursorInfo(consoleHandle, &cursorInfo);
-    cursorInfo.bVisible = false; //ukrycie kursora
-    SetConsoleCursorInfo(consoleHandle, &cursorInfo);
-
-    Setup();
-    while (!gameOver) {
-        Draw();
-        Input();
-        Logic();
-        Sleep(50); //kontrola predkosci weza
+    Ustawienia();
+    while (okno.isOpen()) {
+        Klawisze();
+        if (koniecGry) {
+            okno.close();
+        }
+        Logika();
+        Rysowanie();
     }
     return 0;
 }
-
-
