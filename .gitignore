@@ -1,4 +1,5 @@
 .vs/
-[Bb]in/
-[Oo]bj/
-*.user
+out/
+x64/
+*.obj
+*.pdb

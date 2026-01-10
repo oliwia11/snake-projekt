@@ -46,8 +46,6 @@ void Ustawienia() {
     if (!czcionka.openFromFile("arial.ttf")) std::cerr << "brak arial.ttf\n";
     if (!teksturaMenuTlo.loadFromFile("menu_bg.png")) std::cerr << "brak menu_bg.png\n";
 
-
-
     spriteTlo = std::make_unique<sf::Sprite>(teksturaTlo);
     spriteTlo->setScale({ (float)(SZEROKOSC * ROZMIAR) / teksturaTlo.getSize().x, (float)(WYSOKOSC * ROZMIAR) / teksturaTlo.getSize().y });
 
@@ -86,13 +84,13 @@ void Ustawienia() {
         "---------------------------\n"
         "Sterowanie: W, A, S, D"
     );
-    sf::FloatRect bounds = napisMenu->getLocalBounds();
 
+    sf::FloatRect bounds = napisMenu->getLocalBounds();
+    // Naprawa SFML 3.0 - uzywamy bounds.position i bounds.size
     napisMenu->setOrigin({ bounds.position.x + bounds.size.x / 2.0f, bounds.position.y + bounds.size.y / 2.0f });
 
     float srodekX = (SZEROKOSC * ROZMIAR) / 2.0f;
     float srodekY = (WYSOKOSC * ROZMIAR + 60) / 2.0f;
-
     napisMenu->setPosition({ srodekX, srodekY });
 
     kwadracikWaza = std::make_unique<sf::RectangleShape>(sf::Vector2f{ (float)ROZMIAR - 1.f, (float)ROZMIAR - 1.f });
@@ -102,7 +100,6 @@ void Ustawienia() {
 }
 
 void Logika() {
-    if (aktualnyStan == GRA_NIESKONCZONA) jestBonus = false;
     if (kierunek == 0 || koniecGry) return;
 
     // Ruch ogona
@@ -138,18 +135,17 @@ void Logika() {
         if (dlugoscWaza < 1999) dlugoscWaza++;
         owocX = rand() % SZEROKOSC; owocY = rand() % WYSOKOSC;
 
-        if (!jestBonus && rand() % 10 < 3) {
+        // Szansa na bonus (tylko w klasyku)
+        if (aktualnyStan == GRA_KLASYCZNA && !jestBonus && rand() % 10 < 3) {
             jestBonus = true; bonusCzas = 50;
             bonusX = rand() % SZEROKOSC; bonusY = rand() % WYSOKOSC;
         }
     }
 
-    // Bonusy pojawiają się TYLKO w trybie klasycznym
-    if (aktualnyStan == GRA_KLASYCZNA && !jestBonus && rand() % 10 < 3) {
-        jestBonus = true;
-        bonusCzas = 50;
-        bonusX = rand() % SZEROKOSC;
-        bonusY = rand() % WYSOKOSC;
+    if (jestBonus) {
+        bonusCzas--;
+        if (wazX[0] == bonusX && wazY[0] == bonusY) { wynik += 50; jestBonus = false; }
+        if (bonusCzas <= 0) jestBonus = false;
     }
 }
 
@@ -158,12 +154,10 @@ void Rysowanie() {
 
     if (aktualnyStan == MENU) {
         if (spriteMenuTlo) okno.draw(*spriteMenuTlo);
-
         sf::RectangleShape nakladka(sf::Vector2f((float)SZEROKOSC * ROZMIAR, (float)WYSOKOSC * ROZMIAR + 60));
-        nakladka.setFillColor(sf::Color(0, 0, 0, 100)); // Półprzezroczysty czarny
+        nakladka.setFillColor(sf::Color(0, 0, 0, 100));
         okno.draw(nakladka);
-
-        okno.draw(*napisMenu); // Tu narysuje się legenda z pkt 1
+        okno.draw(*napisMenu);
     }
     else {
         if (spriteTlo) okno.draw(*spriteTlo);
