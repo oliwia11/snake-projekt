@@ -67,6 +67,8 @@ void GenerujPrzeszkody() {
 
 void Ustawienia() {
     srand(static_cast<unsigned int>(time(nullptr)));
+    
+    WczytajRekord();
 
     okno.create(sf::VideoMode({ (unsigned int)SZEROKOSC * ROZMIAR, (unsigned int)WYSOKOSC * ROZMIAR + 60 }), "Wonsz SFML - Projekt");
     okno.setFramerateLimit(10);
@@ -228,6 +230,7 @@ void Rysowanie() {
         sf::RectangleShape nakladka(sf::Vector2f((float)SZEROKOSC * ROZMIAR, (float)WYSOKOSC * ROZMIAR + 60));
         nakladka.setFillColor(sf::Color(0, 0, 0, 100));
         okno.draw(nakladka);
+
         std::string menuStr = "SNAKE - MENU GLOWNE\n---------------------------\nRekord: " + std::to_string(najlepszyWynik) + "\n\n1. TRYB KLASYCZNY Z BONUSAMI\n2. TRYB NIESKONCZONA PLANSZA\n3. TRYB Z PRZESZKODAMI\n\nSterowanie: W, A, S, D";
         napisMenu->setString(menuStr);
         okno.draw(*napisMenu);
@@ -272,8 +275,8 @@ void Rysowanie() {
         if(aktualnyStan == GRA_NIESKONCZONA) trybNapis = " [NIESKONCZONA]";
         else if(aktualnyStan == GRA_PRZESZKODY) trybNapis = " [HARDCORE]";
         else trybNapis = " [KLASYK]";
-        
-        napisWynik->setString("Wynik: " + std::to_string(wynik) + (aktualnyStan == GRA_NIESKONCZONA ? " [NIESKONCZONA]" : " [KLASYK]"));
+
+        napisWynik->setString("Wynik: " + std::to_string(wynik) + " | Rekord: " + std::to_string(najlepszyWynik) + trybNapis);
         okno.draw(*napisWynik);
     }
     okno.display();
