@@ -13,7 +13,7 @@ const int WYSOKOSC = 20;
 const int ROZMIAR = 25;
 const int MAX_PRZESZKOD = 15;
 
-enum StanGry { MENU, GRA_KLASYCZNA, GRA_NIESKONCZONA, GRA_PRZESZKODY};
+enum StanGry { MENU, GRA_KLASYCZNA, GRA_NIESKONCZONA, GRA_PRZESZKODY, KONIEC_GRY};
 StanGry aktualnyStan = MENU;
 
 int wazX[2000], wazY[2000];
@@ -34,7 +34,7 @@ sf::Texture teksturaMenuTlo;
 
 std::unique_ptr<sf::Sprite> spriteMenuTlo;
 std::unique_ptr<sf::Sprite> spriteTlo, spriteJablko, spriteGwiazda, spriteGlowa, spriteKamien;
-std::unique_ptr<sf::Text> napisWynik, napisMenu;
+std::unique_ptr<sf::Text> napisWynik, napisMenu, napisKoniecGry;
 std::unique_ptr<sf::RectangleShape> kwadracikWaza;
 
 void WczytajRekord() {
@@ -69,6 +69,21 @@ void GenerujPrzeszkody() {
         }
     }
 }
+
+// Funkcja resetująca stan gry przed nową rozgrywką
+void ResetujGre() {
+    wazX[0] = SZEROKOSC / 2;
+    wazY[0] = WYSOKOSC / 2;
+    dlugoscWaza = 1;
+    kierunek = 0;
+    wynik = 0;
+    jestBonus = false;
+    koniecGry = false;
+    bonusCzas = 0;
+    iloscPrzeszkod = 0; // Czyścimy przeszkody, wygenerują się ponownie przy wyborze trybu
+    owocX = rand() % SZEROKOSC; owocY = rand() % WYSOKOSC;
+}
+
 
 
 void Ustawienia() {
@@ -144,6 +159,11 @@ void Ustawienia() {
     float srodekY = (WYSOKOSC * ROZMIAR + 60) / 2.0f;
     napisMenu->setPosition({ srodekX, srodekY });
 
+    napisKoniecGry = std::make_unique<sf::Text>(czcionka);
+    napisKoniecGry->setCharacterSize(30);
+    napisKoniecGry->setFillColor(sf::Color::Red);
+    napisKoniecGry->setPosition({ (SZEROKOSC * ROZMIAR) / 2.0f, (WYSOKOSC * ROZMIAR + 60) / 2.0f });
+    
     kwadracikWaza = std::make_unique<sf::RectangleShape>(sf::Vector2f{ (float)ROZMIAR - 1.f, (float)ROZMIAR - 1.f });
     kwadracikWaza->setFillColor(sf::Color::Green);
 
@@ -248,6 +268,19 @@ void Rysowanie() {
         napisMenu->setString(menuStr);
         okno.draw(*napisMenu);
     }
+     else if (aktualnyStan == KONIEC_GRY) {
+        // Używamy tego samego tła co w menu
+        if (spriteMenuTlo) okno.draw(*spriteMenuTlo);
+        sf::RectangleShape nakladka(sf::Vector2f((float)SZEROKOSC * ROZMIAR, (float)WYSOKOSC * ROZMIAR + 60));
+        nakladka.setFillColor(sf::Color(0, 0, 0, 150)); // Trochę ciemniejsza nakładka
+        okno.draw(nakladka);
+
+        std::string koniecStr = "KONIEC GRY!\n\nTwoj wynik: " + std::to_string(wynik) + "\nRekord: " + std::to_string(najlepszyWynik) + "\n\n---------------------------\n[R] - Powrot do MENU\n[Q] lub [ESC] - Wyjscie z gry";
+        napisKoniecGry->setString(koniecStr);
+        sf::FloatRect bounds = napisKoniecGry->getLocalBounds();
+        napisKoniecGry->setOrigin({ bounds.position.x + bounds.size.x / 2.0f, bounds.position.y + bounds.size.y / 2.0f });
+        okno.draw(*napisKoniecGry);
+    }
     else {
         if (spriteTlo) okno.draw(*spriteTlo);
 
@@ -308,6 +341,18 @@ int main() {
                         GenerujPrzeszkody();
                      }
                 }
+                //Obsługa klawiszy w KONIEC GRY
+                else if (aktualnyStan == KONIEC_GRY) {
+                    // R - Reset i powrót do menu
+                    if (klawisz->code == sf::Keyboard::Key::R) {
+                        ResetujGre();
+                        aktualnyStan = MENU;
+                    }
+                    // Q lub Escape - Wyjście
+                    if (klawisz->code == sf::Keyboard::Key::Q || klawisz->code == sf::Keyboard::Key::Escape) {
+                        okno.close();
+                    }
+                }
                 else {
                     if (klawisz->code == sf::Keyboard::Key::A && kierunek != 2) kierunek = 1;
                     if (klawisz->code == sf::Keyboard::Key::D && kierunek != 1) kierunek = 2;
@@ -317,12 +362,15 @@ int main() {
             }
         }
 
-        if (aktualnyStan != MENU) Logika();
+       if (aktualnyStan != MENU && aktualnyStan != KONIEC_GRY) {
+            Logika();
+        }
         Rysowanie();
 
-        if (koniecGry) {
-            sf::sleep(sf::seconds(2));
-            okno.close();
+       if (koniecGry) {
+            sf::sleep(sf::seconds(1)); // Krótka pauza, żeby zobaczyć, że się przegrało
+            aktualnyStan = KONIEC_GRY;
+            koniecGry = false; // Resetujemy flagę, żeby nie wchodzić tu ciągle
         }
     }
     return 0;
