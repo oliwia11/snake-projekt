@@ -5,13 +5,13 @@
 #include <string>
 #include <memory>
 #include <optional>
-#include <vector>
 #include <fstream>
 
 // --- KONFIGURACJA ---
 const int SZEROKOSC = 40;
 const int WYSOKOSC = 20;
 const int ROZMIAR = 25;
+const int MAX_PRZESZKOD = 15;
 
 enum StanGry { MENU, GRA_KLASYCZNA, GRA_NIESKONCZONA, GRA_PRZESZKODY};
 StanGry aktualnyStan = MENU;
@@ -23,7 +23,9 @@ int najlepszyWynik = 0;
 bool jestBonus = false, koniecGry = false;
 
 struct Punkt { int x, y; }; //zmienne dla przeszkod
-std::vector<Punkt> przeszkody;
+
+Punkt przeszkody[MAX_PRZESZKOD]; 
+int iloscPrzeszkod = 0; 
 
 sf::RenderWindow okno;
 sf::Texture teksturaTlo, teksturaJablko, teksturaGwiazda, teksturaGlowa, teksturaKamien;
@@ -53,13 +55,17 @@ void ZapiszRekord() {
 
 //Funkcja do generowania przeszkod
 void GenerujPrzeszkody() {
-    przeszkody.clear();
-    for(int i=0; i<15; i++) { // Generujemy 15 kamieni
+      iloscPrzeszkod = 0;
+
+    for(int i=0; i < MAX_PRZESZKOD; i++) { 
         int kX = rand() % SZEROKOSC;
         int kY = rand() % WYSOKOSC;
+        
         // Upewniamy sie ze kamien nie jest na srodku (gdzie startuje waz)
         if(kX != SZEROKOSC/2 && kY != WYSOKOSC/2) {
-            przeszkody.push_back({kX, kY});
+            przeszkody[iloscPrzeszkod].x = kX;
+            przeszkody[iloscPrzeszkod].y = kY;
+            iloscPrzeszkod++;
         }
     }
 }
@@ -175,8 +181,8 @@ void Logika() {
     }
     //Kolizja z kamieniami (tylko w trybie 3)
     if (aktualnyStan == GRA_PRZESZKODY) {
-        for (const auto& kamien : przeszkody) {
-            if (wazX[0] == kamien.x && wazY[0] == kamien.y) {
+    for (int i = 0; i < iloscPrzeszkod; i++) {// zmiana
+            if (wazX[0] == przeszkody[i].x && wazY[0] == przeszkody[i].y) {
                 koniecGry = true;
             }
         }
@@ -184,11 +190,12 @@ void Logika() {
     // Jedzenie owocow
     if (wazX[0] == owocX && wazY[0] == owocY) {
         wynik += 10;
-        if (wynik > najlepszyWynik) { //zmiana
+       if (wynik > najlepszyWynik) { //zmiana
             najlepszyWynik = wynik;
             ZapiszRekord(); 
         }
         if (dlugoscWaza < 1999) dlugoscWaza++;
+        
         
         //jablko nie zrespi sie na kamieniu
         do {
@@ -196,10 +203,16 @@ void Logika() {
             owocY = rand() % WYSOKOSC;
             bool kolizjaZKamieniem = false;
             if(aktualnyStan == GRA_PRZESZKODY) {
-                for(auto& k : przeszkody) if(k.x == owocX && k.y == owocY) kolizjaZKamieniem = true;
+           for(int i = 0; i < iloscPrzeszkod; i++) {
+                    if(przeszkody[i].x == owocX && przeszkody[i].y == owocY) {
+                        kolizjaZKamieniem = true;
+                        break;
+                    }
+                }
             }
             if(!kolizjaZKamieniem) break;
         } while(true);
+
    
 
         // Szansa na bonus (tylko w klasyku)
@@ -240,14 +253,13 @@ void Rysowanie() {
 
         //rysowanie przeszkod
         if (aktualnyStan == GRA_PRZESZKODY) {
-            for (const auto& kamien : przeszkody) {
+           for (int i = 0; i < iloscPrzeszkod; i++) {
                 if (spriteKamien && teksturaKamien.getSize().x > 0) {
-                    spriteKamien->setPosition({ (float)kamien.x * ROZMIAR, (float)kamien.y * ROZMIAR });
+                    spriteKamien->setPosition({ (float)przeszkody[i].x * ROZMIAR, (float)przeszkody[i].y * ROZMIAR });
                     okno.draw(*spriteKamien);
                 }
-                }
             }
-        
+        }
         spriteJablko->setPosition({ (float)owocX * ROZMIAR, (float)owocY * ROZMIAR });
         okno.draw(*spriteJablko);
 
