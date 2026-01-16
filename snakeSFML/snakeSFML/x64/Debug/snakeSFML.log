@@ -1,2 +1,9 @@
 ﻿  snakeSFML.cpp
+C:\Users\Oliwia\Desktop\projekt\snake-projekt\snakeSFML\snakeSFML\snakeSFML.cpp(80,29): warning C4834: odrzucenie wartości zwracanej funkcji z atrybutem [[nodiscard]]
+C:\Users\Oliwia\Desktop\projekt\snake-projekt\snakeSFML\snakeSFML\snakeSFML.cpp(81,32): warning C4834: odrzucenie wartości zwracanej funkcji z atrybutem [[nodiscard]]
+C:\Users\Oliwia\Desktop\projekt\snake-projekt\snakeSFML\snakeSFML\snakeSFML.cpp(82,33): warning C4834: odrzucenie wartości zwracanej funkcji z atrybutem [[nodiscard]]
+C:\Users\Oliwia\Desktop\projekt\snake-projekt\snakeSFML\snakeSFML\snakeSFML.cpp(83,31): warning C4834: odrzucenie wartości zwracanej funkcji z atrybutem [[nodiscard]]
+C:\Users\Oliwia\Desktop\projekt\snake-projekt\snakeSFML\snakeSFML\snakeSFML.cpp(84,32): warning C4834: odrzucenie wartości zwracanej funkcji z atrybutem [[nodiscard]]
+C:\Users\Oliwia\Desktop\projekt\snake-projekt\snakeSFML\snakeSFML\snakeSFML.cpp(85,33): warning C4834: odrzucenie wartości zwracanej funkcji z atrybutem [[nodiscard]]
+C:\Users\Oliwia\Desktop\projekt\snake-projekt\snakeSFML\snakeSFML\snakeSFML.cpp(86,26): warning C4834: odrzucenie wartości zwracanej funkcji z atrybutem [[nodiscard]]
   snakeSFML.vcxproj -> C:\Users\Oliwia\Desktop\projekt\snake-projekt\snakeSFML\x64\Debug\snakeSFML.exe
