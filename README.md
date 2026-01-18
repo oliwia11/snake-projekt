@@ -10,7 +10,7 @@ Klasyczna gra Snake zaimplementowana w języku C++ przy użyciu najnowszej bibli
     * Zarządzanie logiką trybów gry i wyłączanie bonusów w trybie nieskończonym.
 * **Dominika**: Przygotowanie zasobów graficznych (tekstury, tło) oraz bazowa mechanika ruchu.
 * **Zuzia**: 
-   * Implementacja systemu High Score (trwały zapis i odczyt najlepszego wyniku z pliku tekstowego).
+   * System ochrony danych (Szyfrowanie XOR): Implementacja mechanizmu zapisu i odczytu rekordów (High          Score) z wykorzystaniem szyfrowania bitowego XOR. Zabezpiecza to plik wynikowy przed ręczną edycją i       zapewnia integralność danych.
    * Stworzenie Trybu z Przeszkodami wraz z algorytmem losowej generacji kamieni i nową logiką kolizji.
    * Projekt graficznego ekranu Game Over wyświetlającego statystyki oraz podsumowanie wyniku.
    * Obsługa stanów końcowych gry oraz funkcjonalności restartu (R) i wyjścia (ESC) z aplikacji.
