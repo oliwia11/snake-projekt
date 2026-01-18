@@ -12,6 +12,7 @@ const int SZEROKOSC = 40;
 const int WYSOKOSC = 20;
 const int ROZMIAR = 25;
 const int MAX_PRZESZKOD = 15;
+const char KLUCZ = 'S';
 
 enum StanGry { MENU, GRA_KLASYCZNA, GRA_NIESKONCZONA, GRA_PRZESZKODY, KONIEC_GRY, PERSONALIZACJA };
 StanGry aktualnyStan = MENU;
@@ -44,12 +45,31 @@ std::unique_ptr<sf::RectangleShape> kwadracikWaza;
 
 void WczytajRekord() {
     std::ifstream plik("rekord.txt");
-    if (plik.is_open()) { plik >> najlepszyWynik; plik.close(); }
+  if (plik.is_open()) {
+        std::string zaszyfrowanyWynik;
+        plik >> zaszyfrowanyWynik;
+        for (char &c : zaszyfrowanyWynik) {
+            c = c ^ KLUCZ; // Ponowny XOR z tym samym kluczem deszyfruje dane
+        }
+        try {
+            najlepszyWynik = std::stoi(zaszyfrowanyWynik);
+        } catch (...) {
+            najlepszyWynik = 0; // W razie błędu (np. pusty plik)
+        }
+        plik.close();
+    }
 }
 
 void ZapiszRekord() {
     std::ofstream plik("rekord.txt");
-    if (plik.is_open()) { plik << najlepszyWynik; plik.close(); }
+   if (plik.is_open()) {
+        std::string wynikStr = std::to_string(najlepszyWynik);
+        for (char &c : wynikStr) {
+            c = c ^ KLUCZ; // Operacja XOR - szyfrowanie każdego znaku
+        }
+        plik << wynikStr;
+        plik.close();
+    }
 }
 
 void GenerujPrzeszkody() {
