@@ -12,7 +12,7 @@ const int SZEROKOSC = 40;
 const int WYSOKOSC = 20;
 const int ROZMIAR = 25;
 const int MAX_PRZESZKOD = 15;
-const char KLUCZ = 'S';
+const std::string KLUCZ_VIGNERE = "SNAKE"
 
 enum StanGry { MENU, GRA_KLASYCZNA, GRA_NIESKONCZONA, GRA_PRZESZKODY, KONIEC_GRY, PERSONALIZACJA };
 StanGry aktualnyStan = MENU;
@@ -43,31 +43,33 @@ std::unique_ptr<sf::Sprite> spriteMenuTlo, spriteTlo, spriteJablko, spriteGwiazd
 std::unique_ptr<sf::Text> napisWynik, napisMenu, napisKoniecGry, napisPerso;
 std::unique_ptr<sf::RectangleShape> kwadracikWaza;
 
-void WczytajRekord() {
-    std::ifstream plik("rekord.txt");
-  if (plik.is_open()) {
-        std::string zaszyfrowanyWynik;
-        plik >> zaszyfrowanyWynik;
-        for (char &c : zaszyfrowanyWynik) {
-            c = c ^ KLUCZ; // Ponowny XOR z tym samym kluczem deszyfruje dane
+void ZapiszRekord() {
+    std::ofstream plik("rekord.txt");
+    if (plik.is_open()) {
+        std::string wynikStr = std::to_string(najlepszyWynik);
+        for (size_t i = 0; i < wynikStr.length(); i++) {
+            // Przesuwamy znak o wartość litery z klucza
+            wynikStr[i] = wynikStr[i] + KLUCZ_VIGENERE[i % KLUCZ_VIGENERE.length()];
         }
-        try {
-            najlepszyWynik = std::stoi(zaszyfrowanyWynik);
-        } catch (...) {
-            najlepszyWynik = 0; // W razie błędu (np. pusty plik)
-        }
+        plik << wynikStr;
         plik.close();
     }
 }
 
-void ZapiszRekord() {
-    std::ofstream plik("rekord.txt");
-   if (plik.is_open()) {
-        std::string wynikStr = std::to_string(najlepszyWynik);
-        for (char &c : wynikStr) {
-            c = c ^ KLUCZ; // Operacja XOR - szyfrowanie każdego znaku
+void WczytajRekord() {
+    std::ifstream plik("rekord.txt");
+    if (plik.is_open()) {
+        std::string zaszyfrowany;
+        plik >> zaszyfrowany;
+        for (size_t i = 0; i < zaszyfrowany.length(); i++) {
+            // Cofamy przesunięcie o tę samą literę z klucza
+            zaszyfrowany[i] = zaszyfrowany[i] - KLUCZ_VIGENERE[i % KLUCZ_VIGENERE.length()];
         }
-        plik << wynikStr;
+        try {
+            najlepszyWynik = std::stoi(zaszyfrowany);
+        } catch (...) {
+            najlepszyWynik = 0;
+        }
         plik.close();
     }
 }
