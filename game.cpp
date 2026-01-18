@@ -12,7 +12,7 @@ const int SZEROKOSC = 40;
 const int WYSOKOSC = 20;
 const int ROZMIAR = 25;
 const int MAX_PRZESZKOD = 15;
-const std::string KLUCZ_VIGNERE = "SNAKE"
+const std::string KLUCZ_VIGENERE = "SNAKE";
 
 enum StanGry { MENU, GRA_KLASYCZNA, GRA_NIESKONCZONA, GRA_PRZESZKODY, KONIEC_GRY, PERSONALIZACJA };
 StanGry aktualnyStan = MENU;
