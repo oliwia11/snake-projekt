@@ -160,7 +160,9 @@ void Logika() {
 
     for (int i = 1; i < dlugoscWaza; i++) if (wazX[i] == wazX[0] && wazY[i] == wazY[0]) koniecGry = true;
     if (aktualnyStan == GRA_PRZESZKODY) {
-        for (int i = 0; i < iloscPrzeszkod; i++) if (wazX[0] == przeszkody[i].x && wazY[0] == przeszkody[i].y) koniecGry = true;
+        for (int i = 0; i < iloscPrzeszkod; i++)
+            if (wazX[0] == przeszkody[i].x && wazY[0] == przeszkody[i].y) 
+                koniecGry = true;
     }
 
     if (wazX[0] == owocX && wazY[0] == owocY) {
