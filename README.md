@@ -9,11 +9,11 @@ Klasyczna gra Snake zaimplementowana w języku C++ przy użyciu najnowszej bibli
     * Optymalizacja kodu pod standard C++20 oraz centrowanie interfejsu UI.
     * Zarządzanie logiką trybów gry i wyłączanie bonusów w trybie nieskończonym.
 * **Dominika**: Przygotowanie zasobów graficznych (tekstury, tło) oraz bazowa mechanika ruchu.
-    *Implementacja mechaniki poruszania opartej na pętli wstecznej i kopiowaniu współrzędnych segmentów ogona.
-    *Stworzenie systemu bonusów (Złota Gwiazda) z logiką losowego pojawiania się oraz wartościami punktowymi.
-    *Opracowanie logiki timera ograniczającego czas trwania bonusu do 5 sekund (50 klatek).
-    *Zastosowanie inteligentnych wskaźników std::unique_ptr do zarządzania pamięcią obiektów graficznych.
-    *Przygotowanie oprawy wizualnej poprzez ładowanie tekstur PNG oraz ustalenie kolorystyki "Forest Green" dla interfejsu.
+   *  Implementacja mechaniki poruszania opartej na pętli wstecznej i kopiowaniu współrzędnych segmentów ogona.
+   * Stworzenie systemu bonusów (Złota Gwiazda) z logiką losowego pojawiania się oraz wartościami punktowymi.
+   * Opracowanie logiki timera ograniczającego czas trwania bonusu do 5 sekund (50 klatek).
+   * Zastosowanie inteligentnych wskaźników std::unique_ptr do zarządzania pamięcią obiektów graficznych.
+   * Przygotowanie oprawy wizualnej poprzez ładowanie tekstur PNG oraz ustalenie kolorystyki "Forest Green" dla interfejsu.
 * **Zuzia**: 
    * Zabezpieczenie i trwałość danych (Szyfr Vigenère'a): Implementacja systemu zapisu oraz odczytu             najlepszego wyniku (High Score) z wykorzystaniem polialfabetycznego szyfru podstawieniowego.               Zastosowanie słowa-klucza do przesunięcia znaków w pliku rekord.txt zapewnia integralność danych i
      uniemożliwia prostą edycję rekordów przez użytkownika.
