@@ -19,10 +19,14 @@ Klasyczna gra Snake zaimplementowana w języku C++ przy użyciu najnowszej bibli
 ## 🎮 Tryby gry:
 1. **Klasyczny**: Standardowa rozgrywka z bonusami (gwiazdki) i śmiercią po uderzeniu w ścianę.
 2. **Nieskończony (Infinite)**: Tryb bez ścian – idealny do bicia rekordów bez ryzyka uderzenia w krawędź planszy.
+3. **Hardcore**: Tryb z dodatkowymi przeszkodami.
+
+## Personalizacja: 
+* Menu z możliwością doboru koloru węża.
 
 ## ⌨️ Sterowanie:
 * **W / S / A / D**: Ruch wężem
-* **1 / 2 (w menu)**: Wybór trybu gry
+* **1 / 2 / 3 / 4 (w menu)**: Wybór trybu gry
 
 ## 🛠️ Technologie:
 * Język: C++20
